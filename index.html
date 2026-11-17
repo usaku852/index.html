@@ -210,13 +210,6 @@
     .next-btn.show {
       display: inline-block;
     }
-
-    .loading {
-      text-align: center;
-      padding: 36px 0;
-      color: var(--muted);
-      font-size: 1rem;
-    }
   </style>
 </head>
 <body>
@@ -226,9 +219,7 @@
       <span class="counter" id="statusText">Loading...</span>
     </div>
 
-    <div id="loadingBox" class="loading">Loading dental questions...</div>
-
-    <div id="quizBox" style="display: none;">
+    <div id="quizBox">
       <div class="question-text" id="questionText"></div>
       <div class="options" id="optionsContainer"></div>
       <div class="explanation" id="explanationBox"></div>
@@ -239,91 +230,52 @@
   </div>
 
   <script>
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1m0hWSLClOUzIHXOcQy4QzXAikNedv_IPfRN7IMJUUfI/gviz/tq?tqx=out:csv";
-    const ALLOW_NEXT = true;
-
-    const FALLBACK_QUESTIONS = [
-      {
-        question: "Which tooth is the first permanent tooth to erupt?",
-        A: "Mandibular first molar",
-        B: "Maxillary central incisor",
-        C: "Mandibular canine",
-        D: "Maxillary first premolar",
-        correct: "A",
-        explanation: "The mandibular first molar typically erupts around age 6."
-      }
+    // Embedded 40 Clinical Dental Questions (Guaranteed to work 100% offline & online)
+    const allQuestions = [
+      { question: "Which root of the maxillary first molar is widest mesiodistally?", A: "Palatal root", B: "Mesiobuccal root", C: "Distobuccal root", D: "None of the above", correct: "A", explanation: "The palatal root is the longest and widest mesiodistally." },
+      { question: "What is the primary tissue-dissolving agent in endodontic irrigation?", A: "EDTA", B: "Sodium hypochlorite (NaOCl)", C: "Chlorhexidine", D: "Saline", correct: "B", explanation: "NaOCl dissolves organic necrotic tissue and organic components of the smear layer." },
+      { question: "Which test is considered the most reliable indicator of pulp vitality?", A: "Cold test", B: "Electric pulp test", C: "Heat test", D: "Cavity test", correct: "A", explanation: "Refrigerant cold tests (like Endo-Ice) consistently show high reliability for pulp testing." },
+      { question: "What is the main component of Mineral Trioxide Aggregate (MTA)?", A: "Zinc oxide", B: "Calcium silicate", C: "Glass ionomer", D: "Resin matrix", correct: "B", explanation: "MTA is composed mainly of tricalcium silicate, dicalcium silicate, and tricalcium aluminate." },
+      { question: "Which periodontal pathogen is a primary marker in the 'red complex'?", A: "Streptococcus mutans", B: "Actinomyces viscosus", C: "Porphyromonas gingivalis", D: "Lactobacillus acidophilus", correct: "C", explanation: "P. gingivalis is strongly associated with severe chronic periodontitis." },
+      { question: "What is the average dimension of the normal biologic width?", A: "1.0 mm", B: "2.04 mm", C: "4.5 mm", D: "0.5 mm", correct: "B", explanation: "Biologic width encompasses the junctional epithelium (~0.97 mm) and connective tissue attachment (~1.07 mm)." },
+      { question: "According to the 2018 periodontal classification, Stage III periodontitis is defined by:", A: "1-2 mm attachment loss", B: "Interdental CAL >= 5mm and tooth loss <= 4", C: "No tooth loss due to periodontitis", D: "Severe generalized bone loss affecting all teeth", correct: "B", explanation: "Stage III features severe attachment loss and complex management needs." },
+      { question: "Which inflammatory cell is predominant in acute periodontal abscesses?", A: "Macrophage", B: "Lymphocyte", C: "Neutrophil (PMN)", D: "Eosinophil", correct: "C", explanation: "Neutrophils form the vanguard of the acute inflammatory response and purulent exudate." },
+      { question: "When extracting a mandibular premolar, what is the primary movement direction?", A: "Buccal only", B: "Lingual only", C: "Rotational", D: "Buccolingual with apical pressure", correct: "D", explanation: "Mandibular premolars have oval roots and respond best to controlled buccolingual luxation." },
+      { question: "What is the most frequent systemic complication following local anesthesia injection?", A: "Anaphylaxis", B: "Vasodepressor syncope (fainting)", C: "Local tissue necrosis", D: "Trismus", correct: "B", explanation: "Syncope triggered by anxiety or pain is the most common emergency in dental offices." },
+      { question: "Which Le Fort fracture type involves complete separation of the midface from the cranial base?", A: "Le Fort I", B: "Le Fort II", C: "Le Fort III", D: "Mandibular angle fracture", correct: "C", explanation: "Le Fort III is craniofacial dysjunction passing through nasofrontal suture and zygomatic arches." },
+      { question: "Alveolar osteitis (dry socket) typically presents most intensely on which postoperative day?", A: "Day 1", B: "Day 3 to 4", C: "Day 10", D: "Day 14", correct: "B", explanation: "Fibrinolysis of the blood clot peaks around the 3rd to 4th day post-extraction." },
+      { question: "Which ceramic margin design offers optimal esthetics and strength for all-ceramic crowns?", A: "Feather-edge", B: "Bevel", C: "Heavy chamfer or rounded shoulder", D: "Knife-edge", correct: "C", explanation: "A rounded shoulder or heavy chamfer provides adequate bulk for brittle ceramic restorations." },
+      { question: "Polyvinyl siloxane (PVS) impression materials release which byproduct when sulfur is present?", A: "Hydrogen gas", B: "Carbon dioxide", C: "Water vapor", D: "Chlorine gas", correct: "A", explanation: "Certain PVS formulations release hydrogen gas if reacted with latex gloves or sulfur compounds." },
+      { question: "Which major connector is most rigid and commonly used for maxillary removable partial dentures?", A: "Palatal strap", B: "Horseshoe connector", C: "Complete palatal plate", D: "Anteroposterior palatal strap", correct: "D", explanation: "AP palatal strap provides maximum rigidity with minimal tissue coverage." },
+      { question: "What is the purpose of an arbitrary facebow transfer?", A: "Record centric relation", B: "Relate maxillary arch to the transverse horizontal axis", C: "Measure vertical dimension of occlusion", D: "Determine interocclusal rest space", correct: "B", explanation: "Facebow transfers orient the maxilla in three-dimensional space relative to TMJs." },
+      { question: "What is the primary etching concentration for phosphoric acid used in enamel bonding?", A: "10%", B: "20%", C: "37%", D: "60%", correct: "C", explanation: "37% phosphoric acid creates optimal micropores in enamel for resin tag penetration." },
+      { question: "What causes polymerization shrinkage stress in resin composites?", A: "Filler particle settling", B: "Monomer conversion into a polymer network", C: "Moisture contamination", D: "Photo-initiator degradation", correct: "B", explanation: "As monomer molecules bond and form polymer chains, intermolecular distance decreases." },
+      { question: "What factor increases the C-factor (configuration factor) in a restorative cavity?", A: "Fewer bonded surfaces relative to unbonded surfaces", B: "More bonded surfaces relative to unbonded surfaces", C: "Using a flowable liner", D: "Increasing curing light intensity", correct: "B", explanation: "Higher ratio of bonded to unbonded surfaces increases contraction stress." },
+      { question: "Which acid is specifically used to etch porcelain veneers before silanating?", A: "Phosphoric acid", B: "Hydrofluoric acid", C: "Citric acid", D: "Carbonic acid", correct: "B", explanation: "Hydrofluoric acid selectively dissolves the glassy matrix of silica-based ceramics." },
+      { question: "Which Angle classification features the mesiobuccal cusp of the maxillary first molar occluding in the buccal groove of the mandibular first molar?", A: "Class I", B: "Class II Division 1", C: "Class II Division 2", D: "Class III", correct: "A", explanation: "Angle Class I is normal molar key relationship." },
+      { question: "What is a primary risk associated with excessive orthodontic tipping forces?", A: "Pulp necrosis", B: "Apical root resorption", C: "Cementum deposition", D: "Alveolar bone thickening", correct: "B", explanation: "Heavy continuous forces concentrate stress at root apices leading to resorption." },
+      { question: "Which cervical vertebral maturation (CVM) stage indicates the peak mandibular growth spurt?", A: "CS1", B: "CS3 or CS4", C: "CS6", D: "CS2", correct: "B", explanation: "CS3/CS4 correlates with maximum adolescent pubertal growth velocity." },
+      { question: "Orthodontic tooth movement occurs via bone resorption on which side of the PDL?", A: "Tension side", B: "Pressure side", C: "Apex only", D: "Both sides equally", correct: "B", explanation: "Compression of the periodontal ligament stimulates osteoclast activity and bone resorption." },
+      { question: "Indirect pulp therapy is indicated when:", A: "There is irreversible pulpitis", B: "Deep caries approaches the pulp without pulp exposure", C: "There is spontaneous night pain", D: "The tooth is non-vital", correct: "B", explanation: "Leaving a thin layer of affected dentin prevents pulp exposure while arresting caries." },
+      { question: "What is the optimal emergency storage medium for an avulsed permanent tooth?", A: "Dry tissue", B: "Tap water", C: "Cold milk or Hank's Balanced Salt Solution (HBSS)", D: "Saliva in a cup for 24 hours", correct: "C", explanation: "HBSS or cold milk maintains periodontal ligament cell viability." },
+      { question: "Which space maintainer is ideal for premature loss of a mandibular primary second molar before first permanent molar eruption?", A: "Band and loop", B: "Lingual arch", C: "Distal shoe", D: "Nance appliance", correct: "C", explanation: "Distal shoe guides the unerupted permanent first molar into correct alignment." },
+      { question: "Early Childhood Caries (ECC) typically impacts which teeth first?", A: "Mandibular incisors", B: "Maxillary primary incisors", C: "Primary canines", D: "Second primary molars", correct: "B", explanation: "Maxillary incisors are exposed longest to pooled sugary liquids during bottle feeding." },
+      { question: "Which dental anomaly features an extra cusp located on the lingual surface of a maxillary incisor?", A: "Cusp of Carabelli", B: "Talon cusp", C: "Enamel pearl", D: "Taurodontism", correct: "B", explanation: "Talon cusps project from the cingulum area of anterior teeth." },
+      { question: "What is the term for root trunk enlargement where the furcation moves apically?", A: "Taurodontism", B: "Concrescence", C: "Dilaceration", D: "Dens in dente", correct: "A", explanation: "Taurodontism features enlarged pulp chambers and displaced furcations." },
+      { question: "What is the most common site for intraoral squamous cell carcinoma?", A: "Hard palate", B: "Dorsum of tongue", C: "Lateral border and ventral surface of tongue", D: "Gingiva", correct: "C", explanation: "Lateral tongue and floor of mouth are high-risk mucosal areas." },
+      { question: "Radicular cysts are most commonly caused by:", A: "Developmental remnants of dental lamina", B: "Pulpal necrosis and chronic periapical inflammation", C: "Impacted third molars", D: "Salivary gland blockage", correct: "B", explanation: "Rest cell rests of Malassez proliferate due to inflammatory stimuli from necrotic pulp." },
+      { question: "Odontogenic keratocyst (OKC) is notable for its high recurrence rate and association with which syndrome?", A: "Down syndrome", B: "Gorlin syndrome (Nevoid basal cell carcinoma syndrome)", C: "Papillon-Lefevre syndrome", D: "Ehlers-Danlos syndrome", correct: "B", explanation: "Multiple OKCs are a hallmark feature of Gorlin syndrome." },
+      { question: "Wickham striae are characteristic clinical features of:", A: "Oral lichen planus", B: "Leukoplakia", C: "Candidiasis", D: "Pemphigus vulgaris", correct: "A", explanation: "White lacelike reticular lines (Wickham striae) mark oral lichen planus lesions." },
+      { question: "What is the maximum recommended dose (MRD) of lidocaine with 1:100,000 epinephrine for healthy adults?", A: "2.0 mg/kg", B: "4.4 mg/kg (up to 300 mg max)", C: "7.0 mg/kg", D: "10.0 mg/kg", correct: "B", explanation: "Standard safe limit for lidocaine with vasoconstrictor is 4.4 mg/kg." },
+      { question: "Articaine differs structurally from other amide local anesthetics by possessing:", A: "An ester side chain", B: "A thiophene ring instead of a benzene ring", C: "A tertiary amine group", D: "Double the lipid solubility", correct: "B", explanation: "Articaine contains a thiophene ring which enhances lipid solubility and diffusion." },
+      { question: "Antibiotic prophylaxis for infective endocarditis is currently recommended for which patient group?", A: "All patients with mitral valve prolapse", B: "Patients with prosthetic heart valves or previous infective endocarditis", C: "Patients with simple coronary stents", D: "All cardiac patients undergoing routine prophylaxis", correct: "B", explanation: "Guidelines restrict prophylaxis to highest risk cardiac conditions." },
+      { question: "Medication-Related Osteonecrosis of the Jaw (MRONJ) is most strongly linked to:", A: "Antihypertensives", B: "Bisphosphonates and antiresorptive/antiangiogenic drugs", C: "Antibiotics", D: "Antihistamines", correct: "B", explanation: "Inhibition of osteoclast bone remodeling by bisphosphonates increases MRONJ risk." },
+      { question: "What is the primary function of the oblique ridge on maxillary permanent molars?", A: "Esthetics", B: "Encountering biting forces between mesiolingual and distobuccal cusps", C: "Root anchorage", D: "Pulp horn protection", correct: "B", explanation: "The oblique ridge crosses the occlusal surface connecting ML and DB cusps." },
+      { question: "Which permanent tooth has the longest root overall?", A: "Maxillary central incisor", B: "Maxillary canine", C: "Mandibular first molar", D: "Maxillary third molar", correct: "B", explanation: "Maxillary canines possess exceptionally long, robust anchorage roots." }
     ];
 
-    let allQuestions = [];
-    const STORAGE_KEY = "dental_quiz_seen_indices_40_v1";
-
-    function parseCSV(text) {
-      const rows = [];
-      let row = [];
-      let cell = "";
-      let inQuotes = false;
-
-      for (let i = 0; i < text.length; i++) {
-        const ch = text[i];
-        const next = text[i + 1];
-
-        if (ch === '"' && inQuotes && next === '"') {
-          cell += '"';
-          i++;
-        } else if (ch === '"') {
-          inQuotes = !inQuotes;
-        } else if (ch === "," && !inQuotes) {
-          row.push(cell.trim());
-          cell = "";
-        } else if ((ch === "\n" || (ch === "\r" && next === "\n")) && !inQuotes) {
-          if (ch === "\r") i++;
-          row.push(cell.trim());
-          if (row.some(v => v !== "")) rows.push(row);
-          row = [];
-          cell = "";
-        } else {
-          cell += ch;
-        }
-      }
-      if (cell.length > 0 || row.length > 0) {
-        row.push(cell.trim());
-        if (row.some(v => v !== "")) rows.push(row);
-      }
-
-      if (rows.length < 2) return [];
-
-      const headers = rows[0].map(h => h.toLowerCase().trim());
-      const qIdx = headers.indexOf("question");
-      const aIdx = headers.indexOf("a");
-      const bIdx = headers.indexOf("b");
-      const cIdx = headers.indexOf("c");
-      const dIdx = headers.indexOf("d");
-      const corrIdx = headers.indexOf("correct");
-      const expIdx = headers.indexOf("explanation");
-
-      if (qIdx === -1 || aIdx === -1 || bIdx === -1 || cIdx === -1 || dIdx === -1 || corrIdx === -1) {
-        return [];
-      }
-
-      const parsed = [];
-      for (let r = 1; r < rows.length; r++) {
-        const cols = rows[r];
-        const q = cols[qIdx];
-        const corr = (cols[corrIdx] || "").toUpperCase().trim();
-        if (q && ["A", "B", "C", "D"].includes(corr)) {
-          parsed.push({
-            question: q,
-            A: cols[aIdx] || "",
-            B: cols[bIdx] || "",
-            C: cols[cIdx] || "",
-            D: cols[dIdx] || "",
-            correct: corr,
-            explanation: expIdx !== -1 ? (cols[expIdx] || "") : ""
-          });
-        }
-      }
-      return parsed;
-    }
+    const STORAGE_KEY = "dental_quiz_seen_indices_40_v2";
+    const ALLOW_NEXT = true;
 
     function getUnseenQuestionIndex(total) {
       let seen = [];
@@ -428,32 +380,7 @@
       }
     }
 
-    async function initQuiz() {
-      try {
-        if (SHEET_CSV_URL && SHEET_CSV_URL.startsWith("http")) {
-          const res = await fetch(SHEET_CSV_URL);
-          if (res.ok) {
-            const csvText = await res.text();
-            const parsed = parseCSV(csvText);
-            if (parsed.length > 0) {
-              allQuestions = parsed;
-            }
-          }
-        }
-      } catch (err) {
-        console.warn("Could not load Google Sheet CSV, using fallback questions.", err);
-      }
-
-      if (allQuestions.length === 0) {
-        allQuestions = FALLBACK_QUESTIONS;
-      }
-
-      document.getElementById("loadingBox").style.display = "none";
-      document.getElementById("quizBox").style.display = "block";
-      renderNextQuestion();
-    }
-
-    initQuiz();
+    renderNextQuestion();
   </script>
 </body>
 </html>
